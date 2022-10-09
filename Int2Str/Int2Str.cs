@@ -7,26 +7,27 @@ namespace Int2Str
 {
     public static class Int2Str
     {
-        //public static readonly char[] digit2char = new char [] {'0', '1', '2', '3', '4', '5','6','7','8','9'};
-        public static readonly char[] digit2char1 = new char[100];
-        public static readonly char[] digit2char2 = new char[100];
+        public static readonly char[] twoDigitsTochar1 = new char[100];
+        public static readonly char[] twoDigitsTochar2 = new char[100];
 
         public static readonly string[] _singleDigitStrings = new string[] {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
 
-        public static readonly Func<int, string> FastAllocateString;
+        // Internal method that allocates string without initializtion
+        // This method probably never be public to discourage mutation of strings
+        // https://github.com/dotnet/runtime/issues/36989
+        public static readonly Func<int, string> FastAllocateString = typeof(string).GetMethod("FastAllocateString", BindingFlags.Static | BindingFlags.NonPublic).CreateDelegate<Func<int, string>>();
 
         static Int2Str()
         {
             for(int i = 0; i < 100; i++)
             {
-                digit2char1[i] = (char)('0' + i / 10);
-                digit2char2[i] = (char)('0' + i % 10);
+                twoDigitsTochar1[i] = (char)('0' + i / 10);
+                twoDigitsTochar2[i] = (char)('0' + i % 10);
             }
-
-            FastAllocateString = typeof(string).GetMethod("FastAllocateString", BindingFlags.Static | BindingFlags.NonPublic).CreateDelegate<Func<int, string>>();;
         }
 
 
+        // Extract single digit using division and reminder
         public static string Int2Str_Naive(int x)
         {
             if (x == 0)
@@ -48,6 +49,7 @@ namespace Int2Str
             return new string(result.ToArray());
         }
 
+        // Extract single digit using division and multiplication
         public static string Int2Str_NaiveOptimized(int x)
         {
             if (x == 0)
@@ -69,7 +71,10 @@ namespace Int2Str
             return new string(result.ToArray());
         }
 
-        public static unsafe string Int2Str_BinSearch_Div10(long x)
+        // Detect string length using binary search
+        // Allocate buffer
+        // Extract single digit using division by 10
+        public static unsafe string Int2Str_LengthBinSearch_Div10(long x)
         {
             var charCount = FindCharCount(x);
 
@@ -95,7 +100,10 @@ namespace Int2Str
             return result;
         }
 
-        public static unsafe string Int2Str_BinSearch_Div100(long x)
+        // Detect string length using binary search
+        // Allocate buffer
+        // Extract pair of digits using division by 100
+        public static unsafe string Int2Str_LengthBinSearch_Div100(long x)
         {
             var charCount = FindCharCount(x);
 
@@ -106,7 +114,7 @@ namespace Int2Str
 
             var result = FastAllocateString(charCount);
             
-            fixed(char* buffer = result)
+            fixed (char* buffer = result)
             {
                 char* p = buffer + charCount;
 
@@ -114,15 +122,15 @@ namespace Int2Str
                 {
                     x = Math.DivRem(x, 100, out var remainder);
 
-                    *(--p) = digit2char2[remainder];
-                    *(--p) = digit2char1[remainder];
+                    *(--p) = twoDigitsTochar2[remainder];
+                    *(--p) = twoDigitsTochar1[remainder];
                 }
                 while (x >= 100);
 
                 if (x >= 10)
                 {
-                    *(--p) = digit2char2[x];
-                    *(--p) = digit2char1[x];
+                    *(--p) = twoDigitsTochar2[x];
+                    *(--p) = twoDigitsTochar1[x];
                 }
                 else if (x > 0)
                 {
@@ -174,10 +182,5 @@ namespace Int2Str
                     ? (x <       100_000_000_000_000) ? (x <      10_000_000_000_000 ? 13 : 14) : (x <      1_000_000_000_000_000 ? 15 : 16)
                     : (x < 1_000_000_000_000_000_000) ? (x < 100_000_000_000_000_000 ? 17 : 18) : (x < 10_000_000_000_000_000_000 ? 19 : 20));
         }
-
-        private static void EmptySpanAction(Span<char> spam, object arg)
-        {
-        }
-
     }
 }

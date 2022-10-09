@@ -29,7 +29,7 @@ namespace Int2Str.Test
         [InlineData(long.MaxValue)]
         public void Test_Int2Str_BinSearch_Div10(long n)
         {
-            Assert.Equal(n.ToString(), Int2Str.Int2Str_BinSearch_Div10(n));
+            Assert.Equal(n.ToString(), Int2Str.Int2Str_LengthBinSearch_Div10(n));
         }
 
         [Theory]
@@ -42,7 +42,7 @@ namespace Int2Str.Test
         [InlineData(long.MaxValue)]
         public void Test_Int2Str_BinSearch_Div100(long n)
         {
-            Assert.Equal(n.ToString(), Int2Str.Int2Str_BinSearch_Div100(n));
+            Assert.Equal(n.ToString(), Int2Str.Int2Str_LengthBinSearch_Div100(n));
         }
 
         [Fact]
